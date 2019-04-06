@@ -9,10 +9,13 @@ compil:
 	$(CC) -o $(EXEC) pagerank.c $(CFLAGS)
 
 run-little-graph: compil
+	echo "--> Lancement de l'algo power sur " $(PETIT_GRAPH)
 	./$(EXEC) $(PETIT_GRAPH)
+	echo "\n--> Lancement de l'algo power Gauss-Seidel sur " $(PETIT_GRAPH)
+	./$(EXEC) $(PETIT_GRAPH) seidel
 
-run-test:
-	./$(EXEC) $(GRAPH_TEST)
+run-test: compil
+	./$(EXEC) $(GRAPH_TEST2) seidel
 
 clean:
 	rm pagerank

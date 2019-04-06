@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
 #define epsilon pow(10,-12)
 #define alpha 0.85
@@ -88,7 +89,6 @@ TabListe* read_file(char* path, int* size){
             tabN[(elt->j)-1].l = add_elt(tabN[(elt->j)-1].l,elt);
         }
     }
-    //printTab(tabN,*size);
     fclose(fd);
     return tabN;
 }
@@ -97,8 +97,10 @@ TabListe* read_file(char* path, int* size){
 void print_pi(double pi[], int n){
     double somme=0.0;
     for(int i= 0; i<n; i++){
-        if(i<20)
+        if(i<24)
             printf("page %d : %lf\n ",i+1, pi[i]);
+        if(isinf(pi[i]))
+        	printf("page %d : %lf\n ",i+1, pi[i]);
         somme+=pi[i];
     }
     printf("Somme: %lf\n", somme);
@@ -139,7 +141,6 @@ void power(double* pi, TabListe* tab, int n){
 	        tmp=tab[i].l;
 	        while(tmp!=NULL){
 	            piTmp[i]+=(pi[tmp->i-1])*(tmp->val);
-	            //printf("Pour j=%d et i=%d :pi%lf %lf x %lf \n",tmp->j,tmp->i,piTmp[i],pi[tmp->i-1],tmp->val );
 	            tmp=tmp->next;
 	        }
 	    }
@@ -151,13 +152,12 @@ void power(double* pi, TabListe* tab, int n){
 	    }
 
 	    double c1 = (1-alpha)/n, c2=(somme*alpha)/n;
-	    //printf(" valeur de sigma: %lf ",c2);
 	    for(int i=0; i<n; i++){
 	        piTmp[i]*=alpha;
 	        piTmp[i]+=c1;
 	        piTmp[i]+=c2;
 	        double diff_abs = pi[i] - piTmp[i];
-	        convergence +=  diff_abs >= 0.0 ? diff_abs : 0.0-diff_abs;//diff_absolue(pi[i],piTmp[i]);
+	        convergence +=  diff_abs >= 0.0 ? diff_abs : 0.0-diff_abs;
 	        pi[i]=piTmp[i];
 	    }
 	}
@@ -176,28 +176,33 @@ void power_Seidel(double* pi, TabListe* tab, int n){
         init_pi(piTmp,n,0.0);
         convergence = 0.0;
         itt++;
+        if(itt==2947)
+        	printf("%lf\n", pi[2346]);
         for(int i=0; i<n; i++){
+        	if(isinf(pi[i]))
+            	printf("itt %d   %d\n", itt, i+1);
             tmp=tab[i].l;
             /* On commence par la somme S(de j=i+1 à n)=x^k*G[j,i] car tab[i].l contient la colonne
             par ordre de sommets décroissant sur j de G[j,i].
             tmp->i-1 représente l'indice j de la somme */
             while(tmp!=NULL && (tmp->i-1) > i){
-            //	printf("i = %d et j = %d\n", i, tmp->i);
+            	//printf("i = %d et j = %d et pi[j] = %lf et G(j,i) = %lf\n", i, tmp->i, pi[tmp->i-1], tmp->val);
                 piTmp[i]+=(pi[tmp->i-1])*(tmp->val);
                 tmp=tmp->next;
             }
             while(tmp!=NULL){
-            //	printf("i = %d et j = %d\n", i, tmp->i);
+            	//printf("i = %d et j = %d et piTmp[j] = %lf et G(j,i) = %lf\n", i, tmp->i, piTmp[tmp->i-1], tmp->val);
                 piTmp[i]+=(piTmp[tmp->i-1])*(tmp->val);
                 tmp=tmp->next;
             }
 
             /* On divise pi par (1 - G[i,i]) */
-            tmp=tab[i].l;
-            while(tmp!=NULL && tmp->i!=(i+1))
-            	tmp=tmp->next;
-            if(tmp!=NULL)
-            	piTmp[i]=piTmp[i]/(1-tmp->val);
+            // tmp=tab[i].l;
+            // while(tmp!=NULL && tmp->i!=(i+1))
+            // 	tmp=tmp->next;
+           
+            // if(tmp!=NULL && tmp->val != 0.0)
+            // 	piTmp[i]=(1-piTmp[i])/tmp->val;
             
         }
         //initialisation du vecteur f
@@ -207,34 +212,45 @@ void power_Seidel(double* pi, TabListe* tab, int n){
                 somme+=pi[i];
         }
 
-        double c1 = (1-alpha)/n, c2=(somme*alpha)/n;
-        //printf(" valeur de sigma: %lf ",c2);
+        double c1 = (1-alpha)/n, c2=somme*alpha/n;
         for(int i=0; i<n; i++){
             piTmp[i]*=alpha;
             piTmp[i]+=c1;
             piTmp[i]+=c2;
+            
+            tmp=tab[i].l;
+            while(tmp!=NULL && tmp->i!=(i+1))
+            	tmp=tmp->next;
+            if(tmp!=NULL)// && tmp->val != 0.0)
+            	piTmp[i]=piTmp[i]/(1.0-(1.0-alpha)*tmp->val/n-c2);
+            else
+            	piTmp[i]=piTmp[i]/(1.0-c2);
             double diff_abs = pi[i] - piTmp[i];
-            convergence +=  diff_abs >= 0.0 ? diff_abs : 0.0-diff_abs;//diff_absolue(pi[i],piTmp[i]);
+            convergence +=  diff_abs >= 0.0 ? diff_abs : 0.0-diff_abs;
+            
+            
             pi[i]=piTmp[i];
         }
     }
+    printf("itt = %d\n", itt);
     free(piTmp);
 }
 
 
-int main(int argc, char** argv){
-    float temps;
+int main(int argc, char** argv){	//argv[1] = chemin vers le graphe à analyser
+    float temps;					//argv[2] = "seidel" --> algo power seidel sinon algo basique
     clock_t t1, t2;
     t1 = clock();
 	int n =0;
     TabListe* tabListe;
-    tabListe=read_file(argv[1], &n); //argv[1] = chemin vers le graphe à analyser
+    tabListe=read_file(argv[1], &n);
     double* pi= malloc(n*sizeof(double));
     init_pi(pi, n, 1.0/(double)n);
-    //printTab(tabListe, n);
     printf("Lecture du graphe effectuee! \n");
-    power_Seidel(pi, tabListe, n);
-    //power(pi, tabListe, n);
+    if (argv[2] != NULL && strcmp(argv[2], "seidel") == 0)
+	    power_Seidel(pi, tabListe, n);
+    else
+	    power(pi, tabListe, n);
     printf("algo power effectuee! \n");
     print_pi(pi, n);
     free(pi);
