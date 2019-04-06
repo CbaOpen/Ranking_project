@@ -1,0 +1,4 @@
+*.o
+pagerank
+graph/
+__MACOSX/

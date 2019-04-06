@@ -123,6 +123,7 @@ void printTab(TabListe* tab, int size){
     }
 }
 
+/* Calcul du pagerank par l'algorithme basique */
 void power(double* pi, TabListe* tab, int n){
 	double somme;
     double* piTmp = malloc(n*sizeof(double));
@@ -132,9 +133,6 @@ void power(double* pi, TabListe* tab, int n){
 
 	while(convergence>epsilon){
 		init_pi(piTmp,n,0.0);
-		// for(int i=0; i<n; i++){
-		// 	piTmp[i] = 0.0;
-		// }
 		convergence = 0.0;
 		itt++;
 	    for(int i=0; i<n; i++){
@@ -166,6 +164,7 @@ void power(double* pi, TabListe* tab, int n){
 	free(piTmp);
 }
 
+/* Calcul du pagerank par l'algorithme de Gauss Seidel */
 void power_Seidel(double* pi, TabListe* tab, int n){
     double somme;
     double* piTmp = malloc(n*sizeof(double));
@@ -175,29 +174,30 @@ void power_Seidel(double* pi, TabListe* tab, int n){
 
     while(convergence>epsilon){
         init_pi(piTmp,n,0.0);
-        // for(int i=0; i<n; i++){
-        //  piTmp[i] = 0.0;
-        // }
         convergence = 0.0;
         itt++;
         for(int i=0; i<n; i++){
-            for(int j=0;j<i-1;j++){
-                tmp=tab[j].l;
-                while(tmp!=NULL){
-                    piTmp[i]+=(piTmp[j])*(tmp->val);
-                    tmp=tmp->next;
-                }
-            }
-            for(int j=i+1;j<n;j++){
-                tmp=tab[j].l;
-                while(tmp!=NULL){
-                    piTmp[i]+=(pi[j])*(tmp->val);
-                    tmp=tmp->next;
-                }
-            }
             tmp=tab[i].l;
-            while(tmp!=NULL && tmp->i!=i) tmp=tmp->next;
-            if(tmp!=NULL)piTmp[i]=piTmp[i]/(1-tmp->val);
+            /* On commence par la somme S(de j=i+1 à n)=x^k*G[j,i] car tab[i].l contient la colonne
+            par ordre de sommets décroissant sur j de G[j,i].
+            tmp->i-1 représente l'indice j de la somme */
+            while(tmp!=NULL && (tmp->i-1) > i){
+            //	printf("i = %d et j = %d\n", i, tmp->i);
+                piTmp[i]+=(pi[tmp->i-1])*(tmp->val);
+                tmp=tmp->next;
+            }
+            while(tmp!=NULL){
+            //	printf("i = %d et j = %d\n", i, tmp->i);
+                piTmp[i]+=(piTmp[tmp->i-1])*(tmp->val);
+                tmp=tmp->next;
+            }
+
+            /* On divise pi par (1 - G[i,i]) */
+            tmp=tab[i].l;
+            while(tmp!=NULL && tmp->i!=(i+1))
+            	tmp=tmp->next;
+            if(tmp!=NULL)
+            	piTmp[i]=piTmp[i]/(1-tmp->val);
             
         }
         //initialisation du vecteur f
@@ -222,19 +222,19 @@ void power_Seidel(double* pi, TabListe* tab, int n){
 }
 
 
-int main(){
+int main(int argc, char** argv){
     float temps;
     clock_t t1, t2;
     t1 = clock();
 	int n =0;
     TabListe* tabListe;
-    tabListe=read_file("graph/wikipedia-20051105/wikipedia-20051105V2.txt", &n);
+    tabListe=read_file(argv[1], &n); //argv[1] = chemin vers le graphe à analyser
     double* pi= malloc(n*sizeof(double));
     init_pi(pi, n, 1.0/(double)n);
     //printTab(tabListe, n);
     printf("Lecture du graphe effectuee! \n");
-    //convergence_produit(pi,tabListe,n);
     power_Seidel(pi, tabListe, n);
+    //power(pi, tabListe, n);
     printf("algo power effectuee! \n");
     print_pi(pi, n);
     free(pi);
