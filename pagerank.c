@@ -165,8 +165,66 @@ void power(double* pi, TabListe* tab, int n){
 	free(piTmp);
 }
 
+void power_Seidel(double* pi, TabListe* tab, int n){
+    double somme;
+    double* piTmp = malloc(n*sizeof(double));
+    Liste tmp;
+    double convergence=1.0;
+    int itt = 0;
+
+    while(convergence>epsilon){
+        init_pi(piTmp,n,0.0);
+        // for(int i=0; i<n; i++){
+        //  piTmp[i] = 0.0;
+        // }
+        convergence = 0.0;
+        itt++;
+        for(int i=0; i<n; i++){
+            for(int j=0;j<i-1;j++){
+                tmp=tab[j].l;
+                while(tmp!=NULL){
+                    piTmp[i]+=(piTmp[j])*(tmp->val);
+                    tmp=tmp->next;
+                }
+            }
+            for(int j=i+1;j<n;j++){
+                tmp=tab[j].l;
+                while(tmp!=NULL){
+                    piTmp[i]+=(pi[j])*(tmp->val);
+                    tmp=tmp->next;
+                }
+            }
+            tmp=tab[i].l;
+            while(tmp!=NULL && tmp->i!=i) tmp=tmp->next;
+            if(tmp!=NULL)piTmp[i]=piTmp[i]/(1-tmp->val);
+            
+        }
+        //initialisation du vecteur f
+        somme=0;
+        for(int i=0;i<n; i++){
+            if(tab[i].deg==0)
+                somme+=pi[i];
+        }
+
+        double c1 = (1-alpha)/n, c2=(somme*alpha)/n;
+        //printf(" valeur de sigma: %lf ",c2);
+        for(int i=0; i<n; i++){
+            piTmp[i]*=alpha;
+            piTmp[i]+=c1;
+            piTmp[i]+=c2;
+            double diff_abs = pi[i] - piTmp[i];
+            convergence +=  diff_abs >= 0.0 ? diff_abs : 0.0-diff_abs;//diff_absolue(pi[i],piTmp[i]);
+            pi[i]=piTmp[i];
+        }
+    }
+    free(piTmp);
+}
+
 
 int main(){
+    float temps;
+    clock_t t1, t2;
+    t1 = clock();
 	int n =0;
     TabListe* tabListe;
     tabListe=read_file("graph/wikipedia-20051105/wikipedia-20051105V2.txt", &n);
@@ -175,10 +233,13 @@ int main(){
     //printTab(tabListe, n);
     printf("Lecture du graphe effectuee! \n");
     //convergence_produit(pi,tabListe,n);
-    power(pi, tabListe, n);
+    power_Seidel(pi, tabListe, n);
     printf("algo power effectuee! \n");
     print_pi(pi, n);
     free(pi);
     free_tabListe(tabListe, n);
+    t2 = clock();
+    temps = (float)(t2-t1)/CLOCKS_PER_SEC;
+    printf("temps = %f\n", temps);
     return 0;
 }
