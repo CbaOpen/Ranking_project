@@ -99,7 +99,7 @@ void print_pi(double pi[], int n){
     for(int i= 0; i<n; i++){
         if(i<24)
             printf("page %d : %lf\n ",i+1, pi[i]);
-        if(isinf(pi[i]))
+        if(isinf(pi[i]) || isnan(pi[i]))
         	printf("page %d : %lf\n ",i+1, pi[i]);
         somme+=pi[i];
     }
@@ -162,6 +162,7 @@ void power(double* pi, TabListe* tab, int n){
 	    }
 	}
 	free(piTmp);
+    printf("itt = %d\n", itt);
 }
 
 /* Calcul du pagerank par l'algorithme de Gauss Seidel */
@@ -212,6 +213,7 @@ void power_Seidel(double* pi, TabListe* tab, int n){
                 somme+=pi[i];
         }
 
+        double no=0;
         double c1 = (1-alpha)/n, c2=somme*alpha/n;
         for(int i=0; i<n; i++){
             piTmp[i]*=alpha;
@@ -220,17 +222,26 @@ void power_Seidel(double* pi, TabListe* tab, int n){
             
             tmp=tab[i].l;
             while(tmp!=NULL && tmp->i!=(i+1))
-            	tmp=tmp->next;
+                tmp=tmp->next;
             if(tmp!=NULL)// && tmp->val != 0.0)
-            	piTmp[i]=piTmp[i]/(1.0-(1.0-alpha)*tmp->val/n-c2);
+                piTmp[i]=piTmp[i]/(1.0-(1.0-alpha)*tmp->val/n-c2);
             else
-            	piTmp[i]=piTmp[i]/(1.0-c2);
-            double diff_abs = pi[i] - piTmp[i];
-            convergence +=  diff_abs >= 0.0 ? diff_abs : 0.0-diff_abs;
+                piTmp[i]=piTmp[i]/(1.0-c2);
             
+
             
-            pi[i]=piTmp[i];
+            no+=piTmp[i];
+            
         }
+            
+            
+            for (int k=0;k<n;k++){
+                piTmp[k]=piTmp[k]/no;
+                double diff_abs = pi[k] - piTmp[k];
+                convergence +=  diff_abs >= 0.0 ? diff_abs : 0.0-diff_abs;
+                pi[k]=piTmp[k];
+
+            }
     }
     printf("itt = %d\n", itt);
     free(piTmp);
