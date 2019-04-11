@@ -55,7 +55,8 @@ Liste add_elt(Liste l, Element* elt){
 TabListe* read_file(char* path, int* size){
     FILE* fd = NULL;
     TabListe* tabN;
-    int nulle=0;
+    long double var=0.0, vartmp=0.0;
+    long double moy = 0;
 
     fd = fopen(path, "r");
 
@@ -69,13 +70,14 @@ TabListe* read_file(char* path, int* size){
     Element* elt;
     // on lit n et n
     fscanf(fd,"%d\n%d\n",size,&tmp);
+    moy = (double)tmp/(*size);
     tabN= calloc(*size, sizeof(TabListe));
 
     for(int i=0;i<*size;i++){
         fscanf(fd,"%d ",&iTmp);
         fscanf(fd,"%d ",&degTmp);
-        if(degTmp==0)
-            nulle++;
+        vartmp = (double)degTmp/(*size)-moy;
+        var+= vartmp>=0? vartmp : 0-vartmp;
         tabN[i].deg=degTmp;
         for(int y=0;y<degTmp;y++){
             if(y==degTmp-1)
@@ -92,7 +94,8 @@ TabListe* read_file(char* path, int* size){
             tabN[(elt->j)-1].l = add_elt(tabN[(elt->j)-1].l,elt);
         }
     }
-     printf("nb sommet 'nul' : %d\n",nulle);
+   
+     printf("Var : %LF\n",var/(*size));
     fclose(fd);
     return tabN;
 }
