@@ -15,7 +15,7 @@ run-little-graph: compil
 	./$(EXEC) $(PETIT_GRAPH) seidel
 
 run-test: compil
-	./$(EXEC) $(GRAPH_TEST2) seidel
+	./$(EXEC) $(GRAPH_TEST) seidel
 
 clean:
 	rm pagerank
