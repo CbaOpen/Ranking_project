@@ -52,6 +52,7 @@ Liste add_elt(Liste l, Element* elt){
     return elt;
 }
 
+/* Lit le fichier du graphe web et rempli les structures */
 TabListe* read_file(char* path, int* size){
     FILE* fd = NULL;
     TabListe* tabN;
@@ -226,7 +227,6 @@ void power_Seidel(double* pi, TabListe* tab, int n){
         }
  
         //renormalisation de pi et calcul de la convergence
-     
         for (int k=0;k<n;k++){
             piTmp[k]=piTmp[k]/no;
             diff_abs = pi[k] - piTmp[k];
@@ -247,17 +247,23 @@ int main(int argc, char** argv){    //argv[1] = chemin vers le graphe à analyse
     tabListe=read_file(argv[1], &n);
     double* pi= malloc(n*sizeof(double));
     printf("Lecture du graphe effectuee! \n");
+	printf("\nEffectue power\n");
     t1 = clock();
-    if (argv[2] != NULL && strcmp(argv[2], "seidel") == 0)
-	    power_Seidel(pi, tabListe, n);
-    else
-	    power(pi, tabListe, n);
+    power(pi, tabListe, n);
     t2 = clock();
-    printf("algo power effectuee! \n");
-   // print_pi(pi, n);
-    free(pi);
-    free_tabListe(tabListe, n);
+    //print_pi(pi, n);
+    printf("algo power effectue! \n");
     temps = (float)(t2-t1)/CLOCKS_PER_SEC;
     printf("temps = %f\n", temps);
+    printf("\nEffectue Gauss-Seidel\n");
+    t1 = clock();
+	power_Seidel(pi, tabListe, n);
+    t2 = clock();
+    //print_pi(pi, n);
+    printf("algo Gauss-Seidel effectue! \n");
+    temps = (float)(t2-t1)/CLOCKS_PER_SEC;
+    printf("temps = %f\n", temps);
+    free(pi);
+    free_tabListe(tabListe, n);
     return 0;
 }
