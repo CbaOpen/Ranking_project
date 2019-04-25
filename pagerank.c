@@ -77,7 +77,8 @@ TabListe* read_file(char* path, int* size){
         fscanf(fd,"%d ",&iTmp);
         fscanf(fd,"%d ",&degTmp);
         vartmp = (double)degTmp/(*size)-moy;
-        var+= vartmp>=0? vartmp : 0-vartmp;
+        vartmp=vartmp*vartmp;
+        var+=vartmp;
         tabN[i].deg=degTmp;
         for(int y=0;y<degTmp;y++){
             if(y==degTmp-1)
@@ -141,7 +142,6 @@ void power(double* pi, TabListe* tab, int n){
     double convergence=1.0;
     double diff_abs, c1 = (double)(1-alpha)/n, c2;
     int itt = 0;
-
 	while(convergence>epsilon){
 		convergence = 0.0;
 		
@@ -156,9 +156,9 @@ void power(double* pi, TabListe* tab, int n){
         }
         c2 = (somme*alpha)/(double)n;
         itt++;
-	    for(int i=0; i<n; i++){
+	    for(int i=0; i<n;i++){
 	        tmp=tab[i].l;
-	        while(tmp!=NULL){
+   	        while(tmp!=NULL){
 	            piTmp[i]+=(pi[tmp->i-1])*(tmp->val);
 	            tmp=tmp->next;
 	        }
@@ -170,6 +170,7 @@ void power(double* pi, TabListe* tab, int n){
 	}
 	free(piTmp);
     printf("itt = %d\n", itt);
+   
 }
 
 /* Calcul du pagerank par l'algorithme de Gauss Seidel */
@@ -247,10 +248,10 @@ int main(int argc, char** argv){    //argv[1] = chemin vers le graphe à analyse
     double* pi= malloc(n*sizeof(double));
     printf("Lecture du graphe effectuee! \n");
     t1 = clock();
-    // if (argv[2] != NULL && strcmp(argv[2], "seidel") == 0)
-	   //  //power_Seidel(pi, tabListe, n);
-    // else
-	   //  //power(pi, tabListe, n);
+    if (argv[2] != NULL && strcmp(argv[2], "seidel") == 0)
+	    power_Seidel(pi, tabListe, n);
+    else
+	    power(pi, tabListe, n);
     t2 = clock();
     printf("algo power effectuee! \n");
    // print_pi(pi, n);
