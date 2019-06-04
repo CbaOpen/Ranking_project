@@ -1,3 +1,4 @@
+
 CFLAGS = -Wall -g -lm
 CC = gcc
 EXEC = pagerank
